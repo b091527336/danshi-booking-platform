@@ -4,63 +4,58 @@ namespace App\Services\TableSit;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use RuntimeException;
 
 class BookingMapper
 {
     public function collection(array $response): array
     {
-        if (array_is_list($response)) {
-            return $response;
+        $items = Arr::get($response, 'data');
+
+        if (! is_array($items) || ! array_is_list($items)) {
+            throw new RuntimeException('TableSit 回應中找不到 data 預約陣列。');
         }
 
-        foreach (['data', 'bookings', 'results', 'items'] as $key) {
-            $items = Arr::get($response, $key);
-
-            if (is_array($items) && array_is_list($items)) {
-                return $items;
-            }
-        }
-
-        throw new RuntimeException('TableSit 回應中找不到預約資料陣列。');
+        return $items;
     }
 
     public function booking(array $payload, string $fallbackTimezone): array
     {
-        $externalId = $this->first($payload, ['id', 'booking_id', 'bookingId', 'uuid']);
-        $startsAt = $this->first($payload, ['starts_at', 'start_at', 'start', 'startTime', 'datetime']);
+        $externalId = Arr::get($payload, 'uid');
+        $startsAt = Arr::get($payload, 'start_at');
 
         if (! $externalId || ! $startsAt) {
-            throw new RuntimeException('預約缺少必要的 id 或開始時間。');
+            throw new RuntimeException('TableSit 預約缺少必要的 uid 或 start_at。');
         }
-
-        $timezone = (string) ($this->first($payload, ['timezone', 'time_zone']) ?: $fallbackTimezone);
 
         return [
             'external_id' => (string) $externalId,
-            'status' => $this->status((string) ($this->first($payload, ['status', 'state']) ?: 'confirmed')),
-            'starts_at' => CarbonImmutable::parse($startsAt, $timezone)->utc(),
-            'ends_at' => ($endsAt = $this->first($payload, ['ends_at', 'end_at', 'end', 'endTime']))
-                ? CarbonImmutable::parse($endsAt, $timezone)->utc()
+            'status' => $this->status((string) Arr::get($payload, 'status', 'confirmed')),
+            'starts_at' => CarbonImmutable::parse($startsAt, $fallbackTimezone)->utc(),
+            'ends_at' => ($endsAt = Arr::get($payload, 'end_at'))
+                ? CarbonImmutable::parse($endsAt, $fallbackTimezone)->utc()
                 : null,
-            'party_size' => $this->nullableInt($this->first($payload, ['party_size', 'partySize', 'guests', 'covers'])),
-            'service_name' => $this->first($payload, ['service.name', 'service_name', 'serviceName']),
-            'notes' => $this->first($payload, ['notes', 'note', 'customer_note']),
-            'source' => $this->first($payload, ['source', 'channel']),
+            'party_size' => is_numeric(Arr::get($payload, 'client_count'))
+                ? (int) Arr::get($payload, 'client_count')
+                : null,
+            'service_name' => $this->serviceNames(Arr::get($payload, 'services', [])),
+            'notes' => $this->publicNotes(Arr::get($payload, 'public_notes', [])),
+            'source' => Arr::get($payload, 'source'),
         ];
     }
 
     public function customer(array $payload): ?array
     {
-        $customer = Arr::get($payload, 'customer', []);
-        $source = is_array($customer) ? $customer : [];
+        $customer = Arr::get($payload, 'client');
 
-        $name = $this->first($source, ['name', 'full_name', 'fullName'])
-            ?: $this->first($payload, ['customer_name', 'customerName']);
-        $phone = $this->first($source, ['phone', 'phone_number', 'phoneNumber'])
-            ?: $this->first($payload, ['customer_phone', 'customerPhone']);
-        $email = $this->first($source, ['email'])
-            ?: $this->first($payload, ['customer_email', 'customerEmail']);
+        if (! is_array($customer)) {
+            return null;
+        }
+
+        $name = Arr::get($customer, 'name');
+        $phone = Arr::get($customer, 'phone');
+        $email = Arr::get($customer, 'email');
 
         if (! $name && ! $phone && ! $email) {
             return null;
@@ -75,42 +70,44 @@ class BookingMapper
 
     public function hasNextPage(array $response, int $currentPage): bool
     {
-        $lastPage = $this->first($response, ['meta.last_page', 'pagination.last_page', 'last_page']);
+        $totalPages = (int) Arr::get($response, 'meta.total_pages', $currentPage);
 
-        if ($lastPage !== null) {
-            return $currentPage < (int) $lastPage;
-        }
-
-        return (bool) $this->first($response, ['links.next', 'next', 'next_page']);
+        return $currentPage < $totalPages;
     }
 
-    private function first(array $data, array $paths): mixed
+    private function serviceNames(array $services): ?string
     {
-        foreach ($paths as $path) {
-            $value = Arr::get($data, $path);
+        $names = Collection::make($services)
+            ->pluck('name')
+            ->filter()
+            ->implode('、');
 
-            if ($value !== null && $value !== '') {
-                return $value;
-            }
-        }
-
-        return null;
+        return $names !== '' ? $names : null;
     }
 
-    private function nullableInt(mixed $value): ?int
+    private function publicNotes(array $notes): ?string
     {
-        return is_numeric($value) ? (int) $value : null;
+        $comments = Collection::make($notes)
+            ->map(fn ($note) => is_array($note) ? Arr::get($note, 'comment') : $note)
+            ->filter()
+            ->implode("\n");
+
+        return $comments !== '' ? $comments : null;
     }
 
     private function status(string $status): string
     {
         return match (strtolower($status)) {
-            'pending', 'requested' => 'pending',
-            'confirmed', 'accepted', 'booked' => 'confirmed',
-            'completed', 'finished' => 'completed',
-            'cancelled', 'canceled', 'declined' => 'cancelled',
-            'no_show', 'no-show', 'noshow' => 'no_show',
-            default => 'confirmed',
+            'awaiting_payment',
+            'waitlist_offered',
+            'awaiting_client_reconfirmation',
+            'waitlist_queued',
+            'requested' => 'pending',
+            'confirmed', 'seated' => 'confirmed',
+            'completed' => 'completed',
+            'cancelled', 'rejected' => 'cancelled',
+            'no_show' => 'no_show',
+            default => 'pending',
         };
     }
 }
