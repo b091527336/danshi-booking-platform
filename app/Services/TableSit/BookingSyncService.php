@@ -17,20 +17,20 @@ class BookingSyncService
     ) {
     }
 
-    public function sync(Organization $organization, ?string $updatedAfter = null): SyncRun
+    public function sync(Organization $organization, string $dateFrom, string $dateTo): SyncRun
     {
         $run = SyncRun::create([
             'organization_id' => $organization->id,
             'status' => 'running',
             'started_at' => now(),
-            'meta' => ['updated_after' => $updatedAfter],
+            'meta' => ['date_from' => $dateFrom, 'date_to' => $dateTo],
         ]);
 
         try {
             $page = 1;
 
             do {
-                $response = $this->client->bookings($organization, $updatedAfter, $page);
+                $response = $this->client->bookings($organization, $dateFrom, $dateTo, $page);
                 $items = $this->mapper->collection($response);
                 $run->increment('received_count', count($items));
 
@@ -98,11 +98,7 @@ class BookingSyncService
 
     private function resolveCustomer(array $data): Customer
     {
-        $customer = null;
-
-        if ($data['email']) {
-            $customer = Customer::where('email', $data['email'])->first();
-        }
+        $customer = $data['email'] ? Customer::where('email', $data['email'])->first() : null;
 
         if (! $customer && $data['phone']) {
             $customer = Customer::where('phone', $data['phone'])->first();
