@@ -6,7 +6,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git unzip curl supervisor libicu-dev libonig-dev libzip-dev \
     && docker-php-ext-install -j"$(nproc)" pdo_mysql mbstring intl bcmath opcache zip \
-    && a2enmod rewrite headers \
+    && a2dismod mpm_event mpm_worker || true
+
+RUN a2enmod mpm_prefork rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
