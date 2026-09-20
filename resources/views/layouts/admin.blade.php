@@ -21,12 +21,10 @@
     <aside class="dbp-sidebar p-4">
         <div class="dbp-brand fw-bold fs-5 mb-4">丹媞創網 DBP</div>
         <nav class="nav flex-column gap-2">
-            <a class="nav-link dbp-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-               href="{{ route('dashboard') }}">Dashboard</a>
-            <a class="nav-link dbp-nav-link {{ request()->routeIs('bookings.*') ? 'active' : '' }}"
-               href="{{ route('bookings.index') }}">預約管理</a>
-            <span class="nav-link dbp-nav-link disabled">客戶管理（下一階段）</span>
-            <span class="nav-link dbp-nav-link disabled">據點管理（下一階段）</span>
+            <a class="nav-link dbp-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
+            <a class="nav-link dbp-nav-link {{ request()->routeIs('bookings.*') ? 'active' : '' }}" href="{{ route('bookings.index') }}">預約管理</a>
+            <a class="nav-link dbp-nav-link {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">客戶管理</a>
+            <a class="nav-link dbp-nav-link {{ request()->routeIs('organizations.*') ? 'active' : '' }}" href="{{ route('organizations.index') }}">據點管理</a>
         </nav>
     </aside>
     <section class="flex-grow-1">
@@ -34,8 +32,7 @@
             <div class="fw-semibold">Booking Platform</div>
             <div class="d-flex align-items-center gap-3">
                 <span class="text-secondary small">{{ auth()->user()->name }}</span>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
+                <form method="POST" action="{{ route('logout') }}">@csrf
                     <button class="btn btn-sm btn-outline-secondary" type="submit">登出</button>
                 </form>
             </div>
