@@ -9,44 +9,37 @@ use RuntimeException;
 
 class TableSitClient
 {
-    public function bookings(Organization $organization, ?string $updatedAfter = null, int $page = 1): array
-    {
-        if (! $organization->external_id) {
-            throw new RuntimeException("據點 {$organization->name} 尚未設定 TableSit Organization ID。");
-        }
-
-        $response = $this->request()->get(config('services.tablesit.bookings_path'), array_filter([
-            config('services.tablesit.organization_parameter', 'organization_id') => $organization->external_id,
-            config('services.tablesit.updated_after_parameter', 'updated_after') => $updatedAfter,
-            config('services.tablesit.page_parameter', 'page') => $page,
-        ], fn ($value) => $value !== null && $value !== ''));
+    public function bookings(
+        Organization $organization,
+        string $dateFrom,
+        string $dateTo,
+        int $page = 1,
+    ): array {
+        $response = $this->request($organization)->get('/bookings', [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'page' => $page,
+            'per_page' => 50,
+        ]);
 
         $response->throw();
 
         return $response->json();
     }
 
-    private function request(): PendingRequest
+    private function request(Organization $organization): PendingRequest
     {
-        $baseUrl = config('services.tablesit.base_url');
-        $apiKey = config('services.tablesit.api_key');
+        $apiKeys = config('services.tablesit.api_keys', []);
+        $apiKey = $apiKeys[$organization->slug] ?? null;
 
-        if (! $baseUrl || ! $apiKey) {
-            throw new RuntimeException('TableSit API 尚未完成設定。');
+        if (! $apiKey) {
+            throw new RuntimeException("據點 {$organization->name} 尚未設定專屬 TableSit API Key。");
         }
 
-        $request = Http::baseUrl($baseUrl)
+        return Http::baseUrl(config('services.tablesit.base_url'))
+            ->withToken($apiKey)
             ->acceptJson()
-            ->asJson()
             ->timeout(config('services.tablesit.timeout', 15))
             ->retry(3, 500, throw: false);
-
-        return match (config('services.tablesit.auth_type', 'bearer')) {
-            'header' => $request->withHeader(
-                config('services.tablesit.auth_header', 'X-API-Key'),
-                $apiKey,
-            ),
-            default => $request->withToken($apiKey),
-        };
     }
 }
