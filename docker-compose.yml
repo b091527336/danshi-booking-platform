@@ -1,0 +1,44 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      APP_NAME: "Danshi Booking Platform"
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: dbp
+      DB_USERNAME: dbp
+      DB_PASSWORD: ${DB_PASSWORD}
+      DBP_ADMIN_NAME: ${DBP_ADMIN_NAME:-DBP 管理者}
+      DBP_ADMIN_EMAIL: ${DBP_ADMIN_EMAIL}
+      DBP_ADMIN_PASSWORD: ${DBP_ADMIN_PASSWORD}
+      TABLESIT_API_KEYS_JSON: ${TABLESIT_API_KEYS_JSON:-{}}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: dbp
+      MYSQL_USER: dbp
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - dbp_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  dbp_mysql:
