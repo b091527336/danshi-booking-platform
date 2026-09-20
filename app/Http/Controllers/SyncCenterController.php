@@ -16,6 +16,7 @@ class SyncCenterController extends Controller
     public function index(): View
     {
         $configuredSlugs = array_keys(config('services.tablesit.api_keys', []));
+        $partnerApiKeyConfigured = filled(config('services.tablesit.partner_api_key'));
 
         return view('sync.index', [
             'runs' => SyncRun::query()
@@ -26,10 +27,12 @@ class SyncCenterController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get()
-                ->map(function (Organization $organization) use ($configuredSlugs) {
+                ->map(function (Organization $organization) use ($configuredSlugs, $partnerApiKeyConfigured) {
                     $organization->setAttribute(
                         'api_key_configured',
-                        in_array($organization->slug, $configuredSlugs, true),
+                        $partnerApiKeyConfigured
+                            ? filled($organization->external_id)
+                            : in_array($organization->slug, $configuredSlugs, true),
                     );
 
                     return $organization;
