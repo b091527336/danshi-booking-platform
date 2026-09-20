@@ -27,8 +27,8 @@ class OrganizationController extends Controller
                         ->orWhere('external_id', 'like', "%{$keyword}%");
                 });
             })
-            ->when(array_key_exists('active', $filters), fn (Builder $query) =>
-                $query->where('is_active', (bool) $filters['active']))
+            ->when($request->filled('active'), fn (Builder $query) =>
+                $query->where('is_active', $request->boolean('active')))
             ->orderByDesc('is_active')
             ->orderBy('name')
             ->paginate(20)
@@ -56,6 +56,8 @@ class OrganizationController extends Controller
 
     public function update(Request $request, Organization $organization): RedirectResponse
     {
+        $provider = (string) $request->input('external_provider');
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'slug' => ['required', 'alpha_dash', 'max:120', Rule::unique('organizations')->ignore($organization)],
@@ -65,7 +67,7 @@ class OrganizationController extends Controller
                 'string',
                 'max:150',
                 Rule::unique('organizations')
-                    ->where(fn ($query) => $query->where('external_provider', $request->string('external_provider')))
+                    ->where(fn ($query) => $query->where('external_provider', $provider))
                     ->ignore($organization),
             ],
             'timezone' => ['required', 'timezone'],
