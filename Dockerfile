@@ -6,9 +6,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git unzip curl supervisor libicu-dev libonig-dev libzip-dev \
     && docker-php-ext-install -j"$(nproc)" pdo_mysql mbstring intl bcmath opcache zip \
-    && a2dismod mpm_event mpm_worker || true
-
-RUN a2enmod mpm_prefork rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -23,9 +20,9 @@ RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoload
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod +x docker/entrypoint.sh
 
-EXPOSE 80
+EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD curl --fail http://localhost/up || exit 1
+    CMD curl --fail http://localhost:8080/up || exit 1
 
 ENTRYPOINT ["docker/entrypoint.sh"]
