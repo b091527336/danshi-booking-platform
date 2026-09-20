@@ -24,16 +24,32 @@ DBP 是丹媞創網自有的多據點預約管理平台。第一個導入客戶�
 composer install
 cp .env.example .env
 php artisan key:generate
-php artisan migrate
+```
+
+先在 `.env` 設定資料庫與第一位管理者：
+
+```dotenv
+DBP_ADMIN_NAME="DBP 管理者"
+DBP_ADMIN_EMAIL=admin@example.com
+DBP_ADMIN_PASSWORD=請設定高強度密碼
+```
+
+接著執行：
+
+```bash
+php artisan migrate --seed
 php artisan serve
 ```
 
-## 目前進度
+開啟 `http://localhost:8000/login` 即可登入。
+
+## 目前進度（DBP v0.3）
 
 - [x] SRS V1.0
 - [x] 資料庫核心模型
 - [x] TableSit API 基礎設定
-- [ ] 管理者登入
-- [ ] Dashboard
+- [x] 管理者登入與登出
+- [x] Dashboard 統計與近期預約
 - [ ] 預約同步服務
 - [ ] 預約列表與明細
+- [ ] 客戶與據點管理
