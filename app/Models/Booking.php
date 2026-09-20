@@ -16,6 +16,7 @@ class Booking extends Model
         'external_provider',
         'external_id',
         'status',
+        'source',
         'starts_at',
         'ends_at',
         'party_size',
