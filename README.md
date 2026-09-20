@@ -26,15 +26,7 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-先在 `.env` 設定資料庫與第一位管理者：
-
-```dotenv
-DBP_ADMIN_NAME="DBP 管理者"
-DBP_ADMIN_EMAIL=admin@example.com
-DBP_ADMIN_PASSWORD=請設定高強度密碼
-```
-
-接著執行：
+在 `.env` 設定資料庫與第一位管理者後執行：
 
 ```bash
 php artisan migrate --seed
@@ -43,14 +35,14 @@ php artisan serve
 
 開啟 `http://localhost:8000/login` 即可登入。
 
-## 目前進度（DBP v0.4）
+## 目前進度（DBP v0.5）
 
 - [x] SRS V1.0
 - [x] 資料庫核心模型
 - [x] TableSit API 基礎設定
-- [x] 管理者登入與登出
-- [x] Dashboard 統計與近期預約
-- [x] 預約列表、搜尋、條件篩選與分頁
-- [x] 預約明細頁
-- [ ] 預約同步服務
-- [ ] 客戶與據點管理
+- [x] 管理者登入與 Dashboard
+- [x] 預約列表、篩選、分頁與明細
+- [x] 客戶列表、搜尋、明細與編輯
+- [x] 據點列表、篩選、明細與設定
+- [ ] TableSit 預約同步服務
+- [ ] 部署與正式環境驗收
