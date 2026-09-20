@@ -25,6 +25,7 @@
             <a class="nav-link dbp-nav-link {{ request()->routeIs('bookings.*') ? 'active' : '' }}" href="{{ route('bookings.index') }}">預約管理</a>
             <a class="nav-link dbp-nav-link {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">客戶管理</a>
             <a class="nav-link dbp-nav-link {{ request()->routeIs('organizations.*') ? 'active' : '' }}" href="{{ route('organizations.index') }}">據點管理</a>
+            <a class="nav-link dbp-nav-link {{ request()->routeIs('sync.*') ? 'active' : '' }}" href="{{ route('sync.index') }}">同步中心</a>
         </nav>
     </aside>
     <section class="flex-grow-1">
