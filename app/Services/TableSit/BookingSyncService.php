@@ -47,7 +47,7 @@ class BookingSyncService
                 $page++;
             } while ($hasNextPage && $page <= config('services.tablesit.max_pages', 100));
 
-            $run->update([
+            $run->refresh()->update([
                 'status' => $run->failed_count > 0 ? 'partial' : 'completed',
                 'finished_at' => now(),
                 'meta' => array_merge($run->meta ?? [], ['pages' => $page - 1]),
@@ -76,12 +76,13 @@ class BookingSyncService
                 'external_provider' => 'tablesit',
                 'external_id' => $mapped['external_id'],
             ]);
-            $wasRecentlyCreated = ! $booking->exists;
+            $isNew = ! $booking->exists;
 
             $booking->fill([
                 'organization_id' => $organization->id,
                 'customer_id' => $customer?->id,
                 'status' => $mapped['status'],
+                'source' => $mapped['source'],
                 'starts_at' => $mapped['starts_at'],
                 'ends_at' => $mapped['ends_at'],
                 'party_size' => $mapped['party_size'],
@@ -91,7 +92,7 @@ class BookingSyncService
                 'synced_at' => now(),
             ])->save();
 
-            $run->increment($wasRecentlyCreated ? 'created_count' : 'updated_count');
+            $run->increment($isNew ? 'created_count' : 'updated_count');
         });
     }
 
