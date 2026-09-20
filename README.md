@@ -1,54 +1,51 @@
 # 丹媞創網 Booking Platform（DBP）
 
-DBP 是丹媞創網自有的多據點預約管理平台。第一個導入客戶為 ANASA 安耐曬，TableSit 作為 Reserve with Google 的底層服務，DBP 透過 Partner API 集中管理各據點預約。
+DBP 是丹媞創網自有的多據點預約管理平台。第一個導入客戶為 ANASA 安耐曬，TableSit 作為 Reserve with Google 的底層服務，DBP 透過 Public API v1 集中管理各據點預約。
 
-## 技術架構
+## TableSit 正式 API 規格
 
-- Laravel 12
-- PHP 8.2+
-- MySQL 8
-- Bootstrap 5
+已依 TableSit OpenAPI 確認：
 
-## 啟動
+- Base URL：`https://www.tablesit.co/api/v1`
+- 認證：`Authorization: Bearer tsk_live_...`
+- 預約列表：`GET /bookings`
+- 日期參數：`date_from`、`date_to`（UTC ISO 8601）
+- 分頁參數：`page`、`per_page`，每頁最多 50 筆
+- 分頁資訊：`meta.page`、`meta.total_pages`
+- 每把 API Key 只綁定一個 Organization，不傳 organization ID
+- 預約主鍵：`uid`
+- 客戶欄位：`client`
+- 人數欄位：`client_count`
+- 來源欄位：`source`
 
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate --seed
-php artisan serve
+## 多據點金鑰
+
+在 `.env` 以 DBP 據點 slug 對應每個 TableSit Organization 的專屬金鑰：
+
+```dotenv
+TABLESIT_API_KEYS_JSON={"anasa-kaohsiung":"tsk_live_xxx","anasa-taipei":"tsk_live_yyy"}
 ```
 
-## TableSit 同步
+API 金鑰不得提交至版本庫。
 
-DBP 已提供可配置的 TableSit REST/JSON 拉取同步引擎：
+## 同步指令
 
 ```bash
 php artisan tablesit:sync-bookings
 php artisan tablesit:sync-bookings anasa-kaohsiung
-php artisan tablesit:sync-bookings --since=2026-09-20T00:00:00Z
+php artisan tablesit:sync-bookings --date-from=2026-09-01T00:00:00Z --date-to=2027-09-01T00:00:00Z
 ```
 
-排程預設每 15 分鐘執行一次。正式上線前，須依 TableSit 實際 OpenAPI 設定 `TABLESIT_BASE_URL`、認證方式、預約端點與查詢參數。API 密鑰不得提交至版本庫。
-
-同步具備：
-
-- 多據點逐一拉取
-- 依外部預約 ID 冪等新增或更新
-- 客戶 Email／電話比對
-- 狀態與時區正規化
-- 原始 JSON 保存
-- 分頁上限保護
-- 同步結果及錯誤紀錄
-- 單筆資料失敗隔離
+排程預設每 15 分鐘同步最近 30 天至未來一年內的預約。
 
 ## 目前進度（DBP v0.6）
 
 - [x] 管理者登入與 Dashboard
 - [x] 預約、客戶與據點管理
-- [x] TableSit API Client 與容錯映射器
-- [x] 跨據點預約同步引擎
-- [x] 同步紀錄、錯誤追蹤與每 15 分鐘排程
-- [ ] 取得 TableSit 正式 OpenAPI 細節並鎖定設定
+- [x] TableSit 正式 Bearer 認證與 v1 端點
+- [x] 官方預約欄位及分頁映射
+- [x] 每據點獨立 API Key
+- [x] 跨據點同步、錯誤紀錄與排程
+- [ ] 填入各據點的正式 `tsk_live_` API Key
 - [ ] 使用真實帳號完成首次同步驗收
 - [ ] 部署正式環境
