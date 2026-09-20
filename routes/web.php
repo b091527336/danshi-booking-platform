@@ -5,6 +5,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\SyncCenterController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -25,6 +26,11 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('organizations', OrganizationController::class)
         ->only(['index', 'show', 'edit', 'update']);
+
+    Route::get('/sync', [SyncCenterController::class, 'index'])->name('sync.index');
+    Route::post('/sync/{organization}', [SyncCenterController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('sync.store');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
