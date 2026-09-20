@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Organization;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -40,9 +41,9 @@ class BookingController extends Controller
             ->when($filters['status'] ?? null, fn (Builder $query, $status) =>
                 $query->where('status', $status))
             ->when($filters['date_from'] ?? null, fn (Builder $query, $dateFrom) =>
-                $query->where('starts_at', '>=', now()->parse($dateFrom)->startOfDay()->utc()))
+                $query->where('starts_at', '>=', $this->localDateToUtc($dateFrom, false)))
             ->when($filters['date_to'] ?? null, fn (Builder $query, $dateTo) =>
-                $query->where('starts_at', '<=', now()->parse($dateTo)->endOfDay()->utc()))
+                $query->where('starts_at', '<=', $this->localDateToUtc($dateTo, true)))
             ->orderByDesc('starts_at')
             ->paginate(20)
             ->withQueryString();
@@ -65,6 +66,13 @@ class BookingController extends Controller
             'booking' => $booking,
             'statuses' => $this->statuses(),
         ]);
+    }
+
+    private function localDateToUtc(string $date, bool $endOfDay): CarbonImmutable
+    {
+        $value = CarbonImmutable::createFromFormat('Y-m-d', $date, config('app.timezone'));
+
+        return ($endOfDay ? $value->endOfDay() : $value->startOfDay())->utc();
     }
 
     private function statuses(): array
