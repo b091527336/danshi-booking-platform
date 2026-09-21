@@ -62,7 +62,8 @@ Artisan::command('tablesit:create-test-organizations {--count=6}', function () {
         }
 
         $data = $response->json();
-        $organizationUid = $data['organizationUid'] ?? null;
+        $payload = $data['data'] ?? [];
+        $organizationUid = $payload['organizationUid'] ?? null;
 
         if (! $organizationUid) {
             $this->error('TableSit 回應缺少 organizationUid，程序已停止且不會自動重試。');
@@ -78,9 +79,9 @@ Artisan::command('tablesit:create-test-organizations {--count=6}', function () {
             'timezone' => 'Asia/Taipei',
             'is_active' => true,
             'settings' => [
-                'tablesit_slug' => $data['slug'] ?? null,
-                'booking_url' => $data['bookingUrl'] ?? null,
-                'tier' => $data['tier'] ?? 'pro',
+                'tablesit_slug' => $payload['slug'] ?? null,
+                'booking_url' => $payload['bookingUrl'] ?? null,
+                'tier' => $payload['tier'] ?? 'pro',
                 'environment' => 'staging',
             ],
         ]);
