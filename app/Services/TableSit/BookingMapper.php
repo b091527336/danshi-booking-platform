@@ -32,9 +32,9 @@ class BookingMapper
         return [
             'external_id' => (string) $externalId,
             'status' => $this->status((string) Arr::get($payload, 'status', 'confirmed')),
-            'starts_at' => CarbonImmutable::parse($startsAt, $fallbackTimezone)->utc(),
+            'starts_at' => CarbonImmutable::parse($startsAt)->setTimezone($fallbackTimezone),
             'ends_at' => ($endsAt = Arr::get($payload, 'end_at'))
-                ? CarbonImmutable::parse($endsAt, $fallbackTimezone)->utc()
+                ? CarbonImmutable::parse($endsAt)->setTimezone($fallbackTimezone)
                 : null,
             'party_size' => is_numeric(Arr::get($payload, 'client_count'))
                 ? (int) Arr::get($payload, 'client_count')
