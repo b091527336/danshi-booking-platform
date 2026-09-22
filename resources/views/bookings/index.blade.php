@@ -8,7 +8,10 @@
         <h1 class="h3 mb-1">預約管理</h1>
         <p class="text-secondary mb-0">集中查詢所有據點的預約紀錄</p>
     </div>
-    <span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ number_format($bookings->total()) }} 筆</span>
+    <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-outline-success" href="{{ route('bookings.export', request()->query()) }}">匯出 CSV</a>
+        <span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ number_format($bookings->total()) }} 筆</span>
+    </div>
 </div>
 
 <div class="card stat-card mb-4">
