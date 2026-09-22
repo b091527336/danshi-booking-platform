@@ -19,6 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::get('/bookings-export', [BookingController::class, 'export'])->name('bookings.export');
     Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
 
     Route::resource('customers', CustomerController::class)
