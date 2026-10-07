@@ -17,20 +17,35 @@ class BookingSyncService
     ) {
     }
 
-    public function sync(Organization $organization, string $dateFrom, string $dateTo): SyncRun
+    public function sync(
+        Organization $organization,
+        string $dateFrom,
+        string $dateTo,
+        ?string $updatedSince = null,
+    ): SyncRun
     {
         $run = SyncRun::create([
             'organization_id' => $organization->id,
             'status' => 'running',
             'started_at' => now(),
-            'meta' => ['date_from' => $dateFrom, 'date_to' => $dateTo],
+            'meta' => [
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'updated_since' => $updatedSince,
+            ],
         ]);
 
         try {
             $page = 1;
 
             do {
-                $response = $this->client->bookings($organization, $dateFrom, $dateTo, $page);
+                $response = $this->client->bookings(
+                    $organization,
+                    $dateFrom,
+                    $dateTo,
+                    $page,
+                    $updatedSince,
+                );
                 $items = $this->mapper->collection($response);
                 $run->increment('received_count', count($items));
 
