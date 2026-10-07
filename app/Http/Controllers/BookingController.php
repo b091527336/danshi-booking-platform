@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -72,6 +73,15 @@ class BookingController extends Controller
             'booking' => $booking,
             'statuses' => $this->statuses(),
         ]);
+    }
+
+    public function destroy(Booking $booking): RedirectResponse
+    {
+        $booking->delete();
+
+        return redirect()
+            ->route('bookings.index')
+            ->with('success', '預約紀錄已刪除，客戶資料仍保留。');
     }
 
     private function validatedFilters(Request $request): array
