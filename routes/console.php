@@ -95,5 +95,5 @@ Artisan::command('tablesit:create-test-organizations {--count=6}', function () {
 })->purpose('Create ANASA staging organizations through the TableSit Partner API');
 
 Schedule::command('tablesit:sync-bookings')
-    ->everyFifteenMinutes()
+    ->everyMinute()
     ->withoutOverlapping(20);
