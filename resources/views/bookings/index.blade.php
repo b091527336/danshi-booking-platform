@@ -64,6 +64,10 @@
     <div class="alert alert-danger">篩選條件有誤，請重新確認日期或選項。</div>
 @endif
 
+@if (session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+
 <div class="card stat-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -104,7 +108,15 @@
                     <td>{{ $booking->party_size ?? '—' }}</td>
                     <td><span class="badge text-bg-{{ $badge }}">{{ $statuses[$booking->status] ?? $booking->status }}</span></td>
                     <td class="text-end pe-4">
-                        <a class="btn btn-sm btn-outline-primary" href="{{ route('bookings.show', $booking) }}">查看</a>
+                        <div class="d-inline-flex gap-1">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ route('bookings.show', $booking) }}">查看</a>
+                            <form method="POST" action="{{ route('bookings.destroy', $booking) }}"
+                                  onsubmit="return confirm('確定要刪除這筆預約紀錄嗎？客戶資料不會被刪除。');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger" type="submit">刪除</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @empty
