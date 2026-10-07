@@ -38,7 +38,7 @@ TABLESIT_API_KEYS_JSON={"anasa-kaohsiung":"tsk_live_xxx"}
 3. 執行 `php artisan migrate --force`。
 4. 在管理者環境變數齊全時建立或更新管理者。
 5. 啟動 Apache 網站。
-6. 啟動 Laravel 排程，讓 TableSit 每 15 分鐘同步。
+6. 啟動 Laravel 排程，讓 TableSit 每分鐘增量同步（保留 60 秒重疊）。
 
 ## 正式驗收順序
 
@@ -50,7 +50,7 @@ TABLESIT_API_KEYS_JSON={"anasa-kaohsiung":"tsk_live_xxx"}
 6. 先用單一據點與短日期範圍執行同步。
 7. 核對收到、新增、更新與失敗筆數。
 8. 抽查 TableSit 與 DBP 的預約時間、客戶、服務及狀態。
-9. 確認 15 分鐘排程產生後續同步紀錄。
+9. 確認每分鐘排程產生後續同步紀錄。
 10. 關閉 `APP_DEBUG` 並確認 HTTPS。
 
 ## 回復方式
