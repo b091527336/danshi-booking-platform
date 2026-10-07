@@ -14,13 +14,20 @@ class TableSitClient
         string $dateFrom,
         string $dateTo,
         int $page = 1,
+        ?string $updatedSince = null,
     ): array {
-        $response = $this->request($organization)->get('/bookings', [
+        $query = [
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
             'page' => $page,
             'per_page' => 50,
-        ]);
+        ];
+
+        if ($updatedSince) {
+            $query['updated_since'] = $updatedSince;
+        }
+
+        $response = $this->request($organization)->get('/bookings', $query);
 
         $response->throw();
 
