@@ -80,7 +80,7 @@
                     <td>{{ $run->created_count }}</td>
                     <td>{{ $run->updated_count }}</td>
                     <td>{{ $run->failed_count }}</td>
-                    <td class="pe-4 text-danger small" style="max-width:320px">{{ IlluminateSupportStr::limit($run->error_message, 100) }}</td>
+                    <td class="pe-4 text-danger small" style="max-width:320px">{{ Illuminate\Support\Str::limit($run->error_message, 100) }}</td>
                 </tr>
             @empty
                 <tr><td colspan="8" class="text-center text-secondary py-5">尚無同步紀錄</td></tr>
