@@ -8,7 +8,7 @@ DBP 是丹媞創網自有的多據點預約管理平台。第一個導入客戶�
 - 認證：`Authorization: Bearer tsk_live_...`
 - 預約列表：`GET /bookings`
 - 每把 API Key 只綁定一個 Organization
-- 系統排程每 15 分鐘同步最近 30 天至未來一年
+- 系統排程每分鐘增量同步，並以 60 秒重疊區間避免漏接更新
 
 ## Docker 啟動
 
