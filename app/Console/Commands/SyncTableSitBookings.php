@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Organization;
+use App\Models\SyncRun;
 use App\Services\TableSit\BookingSyncService;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -41,7 +42,17 @@ class SyncTableSitBookings extends Command
             $this->line("同步：{$organization->name}");
 
             try {
-                $run = $service->sync($organization, $dateFrom, $dateTo);
+                $lastCompletedAt = SyncRun::query()
+                    ->where('organization_id', $organization->id)
+                    ->whereIn('status', ['completed', 'partial'])
+                    ->whereNotNull('finished_at')
+                    ->latest('finished_at')
+                    ->value('finished_at');
+                $updatedSince = $lastCompletedAt
+                    ? CarbonImmutable::parse($lastCompletedAt)->subMinute()->utc()->toIso8601String()
+                    : null;
+
+                $run = $service->sync($organization, $dateFrom, $dateTo, $updatedSince);
                 $this->info("完成：新增 {$run->created_count}、更新 {$run->updated_count}、失敗 {$run->failed_count}");
             } catch (Throwable $exception) {
                 $failed = true;
