@@ -49,6 +49,38 @@ class OrganizationController extends Controller
         return view('organizations.show', compact('organization'));
     }
 
+    public function create(): View
+    {
+        return view('organizations.create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $provider = (string) $request->input('external_provider');
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'slug' => ['required', 'alpha_dash', 'max:120', 'unique:organizations,slug'],
+            'external_provider' => ['required', 'string', 'max:50'],
+            'external_id' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('organizations')
+                    ->where(fn ($query) => $query->where('external_provider', $provider)),
+            ],
+            'timezone' => ['required', 'timezone'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $data['is_active'] = $request->boolean('is_active');
+        $organization = Organization::create($data);
+
+        return redirect()
+            ->route('organizations.show', $organization)
+            ->with('success', '據點已新增。');
+    }
+
     public function edit(Organization $organization): View
     {
         return view('organizations.edit', compact('organization'));
