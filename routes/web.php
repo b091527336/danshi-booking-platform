@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'show', 'edit', 'update']);
 
     Route::resource('organizations', OrganizationController::class)
-        ->only(['index', 'show', 'edit', 'update']);
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
 
     Route::get('/sync', [SyncCenterController::class, 'index'])->name('sync.index');
     Route::post('/sync/{organization}', [SyncCenterController::class, 'store'])
