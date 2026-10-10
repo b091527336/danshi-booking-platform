@@ -3,7 +3,10 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-end mb-4">
     <div><h1 class="h3 mb-1">據點管理</h1><p class="text-secondary mb-0">管理各地區據點與 TableSit 對應</p></div>
-    <span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ number_format($organizations->total()) }} 個</span>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ number_format($organizations->total()) }} 個</span>
+        <a class="btn btn-primary" href="{{ route('organizations.create') }}">新增據點</a>
+    </div>
 </div>
 <div class="card stat-card mb-4"><div class="card-body p-4">
     <form class="row g-2" method="GET">
