@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class LineWebhookController extends Controller
 {
@@ -54,6 +55,21 @@ class LineWebhookController extends Controller
                 }
                 $code->update(['used_at'=>now()]);
             });
+        }
+        // An explicitly configured legacy relay keeps the existing customer-service integration.
+        $relay = config('services.line.channels.'.$channel.'.relay_url');
+        if ($relay) {
+            $parts = parse_url($relay);
+            abort_unless(($parts['scheme'] ?? '') === 'https' && ($parts['host'] ?? '') === 'oa.solines.tw'
+                && ! isset($parts['user']) && ! isset($parts['pass']) && ! isset($parts['port']), 503);
+            try {
+                $response = Http::timeout(10)->withoutRedirecting()
+                    ->withHeaders(['X-Line-Signature'=>(string) $request->header('X-Line-Signature')])
+                    ->withBody($request->getContent(), 'application/json')->post($relay);
+                abort_unless($response->successful(), 503);
+            } catch (\Illuminate\Http\Client\ConnectionException $exception) {
+                abort(503);
+            }
         }
         return response()->json(['ok'=>true]);
     }
