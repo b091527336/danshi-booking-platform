@@ -170,4 +170,26 @@ class BookingNotificationsTest extends TestCase
         $customer=BookingNotification::where('audience','customer')->first();$customer->update(['created_at'=>now()->subHours(13)]);$service->deliver($customer->fresh());
         $this->assertSame('expired',$customer->fresh()->status);Http::assertSentCount(1);
     }
+    public function test_legacy_relay_preserves_body_and_signature_and_reports_failure(): void
+    {
+        $relay='https://oa.solines.tw/line/webhook/test';
+        config(['services.line.channels.anasa.relay_url'=>$relay]);
+        Http::fakeSequence()->push([],200)->push([],500);
+        $payload=json_encode(['events'=>[]]);
+        $signature=base64_encode(hash_hmac('sha256',$payload,'test-secret',true));
+        $headers=['CONTENT_TYPE'=>'application/json','HTTP_X_LINE_SIGNATURE'=>$signature];
+        $this->call('POST','/line/webhook/anasa',[],[],[],$headers,$payload)->assertOk();
+        Http::assertSent(fn ($request) => $request->url()===$relay && $request->body()===$payload && $request->hasHeader('X-Line-Signature',$signature));
+        $this->call('POST','/line/webhook/anasa',[],[],[],$headers,$payload)->assertStatus(503);
+    }
+
+    public function test_relay_cannot_be_redirected_to_arbitrary_servers(): void
+    {
+        config(['services.line.channels.anasa.relay_url'=>'https://example.test/private']);
+        $payload=json_encode(['events'=>[]]);
+        $headers=['CONTENT_TYPE'=>'application/json','HTTP_X_LINE_SIGNATURE'=>base64_encode(hash_hmac('sha256',$payload,'test-secret',true))];
+        $this->call('POST','/line/webhook/anasa',[],[],[],$headers,$payload)->assertStatus(503);
+        Http::assertNothingSent();
+    }
+
 }

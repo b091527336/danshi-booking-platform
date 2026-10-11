@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 @section('title', '客戶管理｜DBP')
 @section('content')
-<div class="d-flex justify-content-between align-items-end mb-4">
+<div class="d-flex flex-wrap gap-3 justify-content-between align-items-end mb-4">
     <div><h1 class="h3 mb-1">客戶管理</h1><p class="text-secondary mb-0">查詢客戶與歷史預約</p></div>
-    <span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ number_format($customers->total()) }} 位</span>
+    <div class="d-flex align-items-center gap-2"><a class="btn btn-outline-primary" href="{{ route('notifications.index') }}">通知內容設定</a><span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ number_format($customers->total()) }} 位</span></div>
 </div>
 <div class="card stat-card mb-4">
     <div class="card-body p-4">
