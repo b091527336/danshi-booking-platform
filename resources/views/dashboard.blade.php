@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard｜DBP')
+@section('title', '營運總覽｜DBP')
 
 @section('content')
-<div class="mb-4">
-    <h1 class="h3 mb-1">Dashboard</h1>
-    <p class="text-secondary mb-0">預約平台即時概況</p>
+<div class="dashboard-hero mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div><div class="small mb-2 opacity-75">DANSHI BOOKING PLATFORM</div><h1 class="h3 mb-2">每一筆預約，都在掌握之中</h1><p class="mb-0 opacity-75">多據點集中管理 · 台北時間 {{ now()->format('Y/m/d') }}</p></div>
+    <a class="btn btn-light" href="{{ route('bookings.index') }}">開啟共用日曆 →</a>
 </div>
 
 <div class="row g-4 mb-5">
@@ -43,7 +43,7 @@
                         <td>{{ $booking->organization?->name ?? '—' }}</td>
                         <td>{{ $booking->customer?->name ?? '—' }}</td>
                         <td>{{ $booking->service_name ?? '—' }}</td>
-                        <td><span class="badge text-bg-secondary">{{ $booking->status }}</span></td>
+                        <td><span class="badge text-bg-secondary">{{ ['confirmed'=>'已確認','pending'=>'待確認','completed'=>'已完成','cancelled'=>'已取消','no_show'=>'未出席'][$booking->status] ?? $booking->status }}</span></td>
                     </tr>
                 @empty
                     <tr><td class="text-center text-secondary py-5" colspan="5">尚無預約資料</td></tr>

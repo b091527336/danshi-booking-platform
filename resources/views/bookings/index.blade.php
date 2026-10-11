@@ -6,10 +6,11 @@
 <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
     <div>
         <h1 class="h3 mb-1">預約管理</h1>
-        <p class="text-secondary mb-0">集中查詢所有據點的預約紀錄</p>
+        <p class="text-secondary mb-0">集中查詢所有據點的預約紀錄 · 台北時間</p>
     </div>
     <div class="d-flex align-items-center gap-2">
         <a class="btn btn-outline-success" href="{{ route('bookings.export', request()->query()) }}">匯出 CSV</a>
+        <a class="btn btn-primary" href="{{ route('bookings.index', ['view' => 'calendar']) }}">共用日曆</a>
         <span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ number_format($bookings->total()) }} 筆</span>
     </div>
 </div>
@@ -17,6 +18,7 @@
 <div class="card stat-card mb-4">
     <div class="card-body p-4">
         <form method="GET" action="{{ route('bookings.index') }}">
+            <input type="hidden" name="view" value="list">
             <div class="row g-3">
                 <div class="col-12 col-lg-4">
                     <label class="form-label" for="keyword">關鍵字</label>
