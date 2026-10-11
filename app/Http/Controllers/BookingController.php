@@ -16,6 +16,9 @@ class BookingController extends Controller
     public function index(Request $request): View
     {
         $filters = $this->validatedFilters($request);
+        if ($request->input('view', 'calendar') === 'calendar') {
+            return $this->calendar($request, $filters);
+        }
         $bookings = $this->filteredBookings($filters, $request->user()->organizationIds())
             ->orderByDesc('starts_at')
             ->paginate(20)
@@ -29,6 +32,27 @@ class BookingController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name']),
             'statuses' => $this->statuses(),
+        ]);
+    }
+
+    private function calendar(Request $request, array $filters): View
+    {
+        $request->validate(['month' => ['nullable', 'date_format:Y-m']]);
+        $month = CarbonImmutable::createFromFormat('!Y-m', $request->input('month') ?: now()->format('Y-m'), config('app.timezone'))->startOfMonth();
+        $start = $month->startOfWeek();
+        $end = $month->endOfMonth()->endOfWeek();
+        $organizationIds = $request->user()->organizationIds();
+        $organizations = Organization::query()->whereIn('id', $organizationIds)->orderBy('id')->get(['id', 'name']);
+        $bookings = $this->filteredBookings($filters, $organizationIds)
+            ->whereBetween('starts_at', [$start, $end])->orderBy('starts_at')->get();
+        $days = [];
+        for ($day = $start; $day->lte($end); $day = $day->addDay()) {
+            $days[] = $day;
+        }
+        return view('bookings.calendar', [
+            'month' => $month, 'days' => $days, 'organizations' => $organizations,
+            'bookingsByDay' => $bookings->groupBy(fn ($booking) => $booking->starts_at->timezone(config('app.timezone'))->format('Y-m-d')),
+            'bookingCount' => $bookings->count(), 'statuses' => $this->statuses(),
         ]);
     }
 
