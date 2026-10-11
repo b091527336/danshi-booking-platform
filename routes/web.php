@@ -14,8 +14,8 @@ Route::redirect('/', '/dashboard');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
-    Route::get('/activate/{user}/{token}', [ClientAccessController::class, 'activate'])->name('client.activate');
-    Route::post('/activate/{user}/{token}', [ClientAccessController::class, 'setPassword'])->name('client.activate.store');
+    Route::get('/activate/{user}', [ClientAccessController::class, 'activate'])->middleware('signed')->name('client.activate');
+    Route::post('/activate/{user}', [ClientAccessController::class, 'setPassword'])->middleware('signed')->name('client.activate.store');
 });
 
 Route::middleware('auth')->group(function () {
