@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 class ClientAccessController extends Controller
@@ -24,28 +24,33 @@ class ClientAccessController extends Controller
     {
         abort_unless($request->user()->isAdmin() && ! $user->isAdmin(), 403);
 
-        $token = Str::random(64);
         $user->forceFill([
-            'activation_token_hash' => hash('sha256', $token),
+            'activation_token_hash' => null,
             'activation_expires_at' => now()->addDays(7),
         ])->save();
 
+        $activationUrl = URL::temporarySignedRoute(
+            'client.activate',
+            $user->activation_expires_at,
+            ['user' => $user]
+        );
+
         return view('client-access.invite', [
             'client' => $user,
-            'activationUrl' => route('client.activate', ['user' => $user, 'token' => $token]),
+            'activationUrl' => $activationUrl,
         ]);
     }
 
-    public function activate(User $user, string $token): View
+    public function activate(User $user): View
     {
-        abort_unless($this->validToken($user, $token), 404);
+        abort_unless($this->activationIsAvailable($user), 404);
 
-        return view('client-access.activate', compact('user', 'token'));
+        return view('client-access.activate', compact('user'));
     }
 
-    public function setPassword(Request $request, User $user, string $token): RedirectResponse
+    public function setPassword(Request $request, User $user): RedirectResponse
     {
-        abort_unless($this->validToken($user, $token), 404);
+        abort_unless($this->activationIsAvailable($user), 404);
 
         $data = $request->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -60,10 +65,9 @@ class ClientAccessController extends Controller
         return redirect()->route('login')->with('success', '密碼設定完成，現在可以使用帳號登入。');
     }
 
-    private function validToken(User $user, string $token): bool
+    private function activationIsAvailable(User $user): bool
     {
-        return filled($user->activation_token_hash)
-            && $user->activation_expires_at?->isFuture()
-            && hash_equals($user->activation_token_hash, hash('sha256', $token));
+        return $user->role === 'client'
+            && $user->activation_expires_at?->isFuture();
     }
 }
