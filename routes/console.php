@@ -97,3 +97,5 @@ Artisan::command('tablesit:create-test-organizations {--count=6}', function () {
 Schedule::command('tablesit:sync-bookings')
     ->everyMinute()
     ->withoutOverlapping(20);
+
+Schedule::command('dbp:send-notifications')->everyMinute()->withoutOverlapping(5);
