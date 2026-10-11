@@ -13,7 +13,7 @@ use Throwable;
 
 class SyncCenterController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $configuredSlugs = array_keys(config('services.tablesit.api_keys', []));
         $partnerApiKeyConfigured = filled(config('services.tablesit.partner_api_key'));
@@ -21,9 +21,11 @@ class SyncCenterController extends Controller
         return view('sync.index', [
             'runs' => SyncRun::query()
                 ->with('organization')
+                ->whereIn('organization_id', $request->user()->organizationIds())
                 ->latest('started_at')
                 ->paginate(20),
             'organizations' => Organization::query()
+                ->whereIn('id', $request->user()->organizationIds())
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get()
@@ -45,6 +47,7 @@ class SyncCenterController extends Controller
         Organization $organization,
         BookingSyncService $service,
     ): RedirectResponse {
+        abort_unless(in_array($organization->id, $request->user()->organizationIds()), 403);
         abort_unless($organization->is_active, 422, '停用的據點無法同步。');
 
         $data = $request->validate([

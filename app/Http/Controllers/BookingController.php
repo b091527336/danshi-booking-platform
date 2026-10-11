@@ -16,7 +16,7 @@ class BookingController extends Controller
     public function index(Request $request): View
     {
         $filters = $this->validatedFilters($request);
-        $bookings = $this->filteredBookings($filters)
+        $bookings = $this->filteredBookings($filters, $request->user()->organizationIds())
             ->orderByDesc('starts_at')
             ->paginate(20)
             ->withQueryString();
@@ -24,6 +24,7 @@ class BookingController extends Controller
         return view('bookings.index', [
             'bookings' => $bookings,
             'organizations' => Organization::query()
+                ->whereIn('id', $request->user()->organizationIds())
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
@@ -41,7 +42,7 @@ class BookingController extends Controller
             fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, ['預約編號', '預約時間', '結束時間', '客戶姓名', '電話', 'Email', '據點', '服務', '人數', '狀態', '來源']);
 
-            $this->filteredBookings($filters)
+            $this->filteredBookings($filters, request()->user()->organizationIds())
                 ->orderBy('starts_at')
                 ->chunkById(200, function ($bookings) use ($output) {
                     foreach ($bookings as $booking) {
@@ -67,6 +68,7 @@ class BookingController extends Controller
 
     public function show(Booking $booking): View
     {
+        abort_unless(in_array($booking->organization_id, request()->user()->organizationIds()), 403);
         $booking->load(['organization', 'customer']);
 
         return view('bookings.show', [
@@ -77,6 +79,7 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking): RedirectResponse
     {
+        abort_unless(in_array($booking->organization_id, request()->user()->organizationIds()), 403);
         $booking->delete();
 
         return redirect()
@@ -95,10 +98,11 @@ class BookingController extends Controller
         ]);
     }
 
-    private function filteredBookings(array $filters): Builder
+    private function filteredBookings(array $filters, array $organizationIds): Builder
     {
         return Booking::query()
             ->with(['organization', 'customer'])
+            ->whereIn('organization_id', $organizationIds)
             ->when($filters['keyword'] ?? null, function (Builder $query, string $keyword) {
                 $query->where(function (Builder $query) use ($keyword) {
                     $query

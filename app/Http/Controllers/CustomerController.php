@@ -17,6 +17,7 @@ class CustomerController extends Controller
         ]);
 
         $customers = Customer::query()
+            ->whereHas('bookings', fn (Builder $query) => $query->whereIn('organization_id', $request->user()->organizationIds()))
             ->withCount('bookings')
             ->when($filters['keyword'] ?? null, function (Builder $query, string $keyword) {
                 $query->where(function (Builder $query) use ($keyword) {
@@ -34,23 +35,28 @@ class CustomerController extends Controller
 
     public function show(Customer $customer): View
     {
+        $this->authorizeCustomer($customer);
+        $organizationIds = request()->user()->organizationIds();
         $customer->load([
             'bookings' => fn ($query) => $query
                 ->with('organization')
+                ->whereIn('organization_id', $organizationIds)
                 ->latest('starts_at')
                 ->limit(10),
-        ])->loadCount('bookings');
+        ])->loadCount(['bookings' => fn ($query) => $query->whereIn('organization_id', $organizationIds)]);
 
         return view('customers.show', compact('customer'));
     }
 
     public function edit(Customer $customer): View
     {
+        $this->authorizeCustomer($customer);
         return view('customers.edit', compact('customer'));
     }
 
     public function update(Request $request, Customer $customer): RedirectResponse
     {
+        $this->authorizeCustomer($customer);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -63,5 +69,10 @@ class CustomerController extends Controller
         return redirect()
             ->route('customers.show', $customer)
             ->with('success', '客戶資料已更新。');
+    }
+
+    private function authorizeCustomer(Customer $customer): void
+    {
+        abort_unless($customer->bookings()->whereIn('organization_id', request()->user()->organizationIds())->exists(), 403);
     }
 }

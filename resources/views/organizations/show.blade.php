@@ -3,8 +3,8 @@
 @section('content')
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-    <div><a class="small text-decoration-none" href="{{ route('organizations.index') }}">← 返回據點列表</a><h1 class="h3 mt-2 mb-1">{{ $organization->name }}</h1><p class="text-secondary mb-0">{{ $organization->external_provider }}／{{ $organization->external_id ?? '尚未綁定' }}</p></div>
-    <a class="btn btn-primary" href="{{ route('organizations.edit', $organization) }}">編輯據點</a>
+    <div><a class="small text-decoration-none" href="{{ route('organizations.index') }}">← 返回據點列表</a><h1 class="h3 mt-2 mb-1">{{ $organization->name }}</h1>@if(auth()->user()->isAdmin())<p class="text-secondary mb-0">{{ $organization->external_provider }}／{{ $organization->external_id ?? '尚未綁定' }}</p>@endif</div>
+    @if(auth()->user()->isAdmin())<a class="btn btn-primary" href="{{ route('organizations.edit', $organization) }}">編輯據點</a>@endif
 </div>
 <div class="row g-4">
     <div class="col-12 col-xl-4"><div class="card stat-card"><div class="card-body p-4">

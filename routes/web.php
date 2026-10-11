@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ClientAccessController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\SyncCenterController;
@@ -13,6 +14,8 @@ Route::redirect('/', '/dashboard');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+    Route::get('/activate/{user}/{token}', [ClientAccessController::class, 'activate'])->name('client.activate');
+    Route::post('/activate/{user}/{token}', [ClientAccessController::class, 'setPassword'])->name('client.activate.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -33,6 +36,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/sync/{organization}', [SyncCenterController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('sync.store');
+
+    Route::get('/client-access', [ClientAccessController::class, 'index'])->name('client-access.index');
+    Route::post('/client-access/{user}/invite', [ClientAccessController::class, 'invite'])->name('client-access.invite');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });

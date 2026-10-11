@@ -21,10 +21,10 @@
         <form method="POST" action="{{ route('login.store') }}">
             @csrf
             <div class="mb-3">
-                <label class="form-label" for="email">電子郵件</label>
-                <input class="form-control form-control-lg @error('email') is-invalid @enderror"
-                       id="email" name="email" type="email" value="{{ old('email') }}" required autofocus>
-                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <label class="form-label" for="login">帳號或電子郵件</label>
+                <input class="form-control form-control-lg @error('login') is-invalid @enderror"
+                       id="login" name="login" type="text" value="{{ old('login') }}" required autofocus>
+                @error('login')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="mb-3">
                 <label class="form-label" for="password">密碼</label>

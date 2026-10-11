@@ -19,6 +19,7 @@ class OrganizationController extends Controller
         ]);
 
         $organizations = Organization::query()
+            ->whereIn('id', $request->user()->organizationIds())
             ->withCount('bookings')
             ->when($filters['keyword'] ?? null, function (Builder $query, string $keyword) {
                 $query->where(function (Builder $query) use ($keyword) {
@@ -39,6 +40,7 @@ class OrganizationController extends Controller
 
     public function show(Organization $organization): View
     {
+        abort_unless(in_array($organization->id, request()->user()->organizationIds()), 403);
         $organization->load([
             'bookings' => fn ($query) => $query
                 ->with('customer')
@@ -51,11 +53,13 @@ class OrganizationController extends Controller
 
     public function create(): View
     {
+        abort_unless(request()->user()->isAdmin(), 403);
         return view('organizations.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->isAdmin(), 403);
         $provider = (string) $request->input('external_provider');
 
         $data = $request->validate([
@@ -83,11 +87,13 @@ class OrganizationController extends Controller
 
     public function edit(Organization $organization): View
     {
+        abort_unless(request()->user()->isAdmin(), 403);
         return view('organizations.edit', compact('organization'));
     }
 
     public function update(Request $request, Organization $organization): RedirectResponse
     {
+        abort_unless($request->user()->isAdmin(), 403);
         $provider = (string) $request->input('external_provider');
 
         $data = $request->validate([

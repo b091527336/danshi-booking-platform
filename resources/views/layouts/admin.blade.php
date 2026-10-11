@@ -19,13 +19,16 @@
 <body>
 <div class="d-lg-flex">
     <aside class="dbp-sidebar p-4">
-        <div class="dbp-brand fw-bold fs-5 mb-4">丹媞創網 DBP</div>
+        <div class="dbp-brand fw-bold fs-5 mb-4">{{ auth()->user()->isAdmin() ? '丹媞創網 DBP' : 'ANASA 管理後台' }}</div>
         <nav class="nav flex-column gap-2">
             <a class="nav-link dbp-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
             <a class="nav-link dbp-nav-link {{ request()->routeIs('bookings.*') ? 'active' : '' }}" href="{{ route('bookings.index') }}">預約管理</a>
             <a class="nav-link dbp-nav-link {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">客戶管理</a>
             <a class="nav-link dbp-nav-link {{ request()->routeIs('organizations.*') ? 'active' : '' }}" href="{{ route('organizations.index') }}">據點管理</a>
             <a class="nav-link dbp-nav-link {{ request()->routeIs('sync.*') ? 'active' : '' }}" href="{{ route('sync.index') }}">同步中心</a>
+            @if(auth()->user()->isAdmin())
+                <a class="nav-link dbp-nav-link {{ request()->routeIs('client-access.*') ? 'active' : '' }}" href="{{ route('client-access.index') }}">客戶帳號</a>
+            @endif
         </nav>
     </aside>
     <section class="flex-grow-1">

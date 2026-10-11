@@ -18,14 +18,16 @@ class AuthenticatedSessionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        $field = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        if (! Auth::attempt([$field => $credentials['login'], 'password' => $credentials['password']], $request->boolean('remember'))) {
             return back()
-                ->withErrors(['email' => '電子郵件或密碼不正確。'])
-                ->onlyInput('email');
+                ->withErrors(['login' => '帳號或密碼不正確。'])
+                ->onlyInput('login');
         }
 
         $request->session()->regenerate();
