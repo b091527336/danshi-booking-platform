@@ -3,6 +3,9 @@
 $tableSitBaseUrl = env('TABLESIT_BASE_URL', 'https://www.tablesit.co/api/v1');
 
 return [
+    'line' => [
+        'channels' => json_decode(env('LINE_CHANNELS_JSON', '{}'), true) ?: [],
+    ],
     'tablesit' => [
         'base_url' => $tableSitBaseUrl,
         'partner_base_url' => env(

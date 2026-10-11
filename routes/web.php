@@ -10,6 +10,7 @@ use App\Http\Controllers\SyncCenterController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
+Route::post('/line/webhook/{channel}', \App\Http\Controllers\LineWebhookController::class)->where('channel', '[a-zA-Z0-9_-]+')->middleware('throttle:120,1');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -19,6 +20,10 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [\App\Http\Controllers\NotificationSettingsController::class, 'index'])->name('notifications.index');
+    Route::put('/notifications', [\App\Http\Controllers\NotificationSettingsController::class, 'update'])->name('notifications.update');
+    Route::post('/notifications/pair', [\App\Http\Controllers\NotificationSettingsController::class, 'pair'])->middleware('throttle:6,1')->name('notifications.pair');
+
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');

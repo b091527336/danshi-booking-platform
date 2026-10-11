@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Organization;
 use App\Models\SyncRun;
+use App\Services\BookingNotificationService;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -93,6 +94,7 @@ class BookingSyncService
             ]);
             $isNew = ! $booking->exists;
 
+            $previous = $booking->only(['status', 'starts_at', 'ends_at', 'service_name']);
             $booking->fill([
                 'organization_id' => $organization->id,
                 'customer_id' => $customer?->id,
@@ -106,6 +108,10 @@ class BookingSyncService
                 'provider_payload' => $payload,
                 'synced_at' => now(),
             ])->save();
+
+            if ($isNew || $booking->wasChanged(array_keys($previous))) {
+                app(BookingNotificationService::class)->enqueue($booking, $isNew ? '新預約已收到' : ($booking->status === 'cancelled' ? '預約已取消' : '預約已更新'));
+            }
 
             $run->increment($isNew ? 'created_count' : 'updated_count');
         });
