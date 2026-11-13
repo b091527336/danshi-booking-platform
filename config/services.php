@@ -13,6 +13,7 @@ return [
             str_replace('/api/v1', '/api/partner/v1', $tableSitBaseUrl),
         ),
         'partner_api_key' => env('TABLESIT_PARTNER_API_KEY'),
+        'webhook_secret' => env('TABLESIT_WEBHOOK_SECRET'),
         'owner_email' => env('TABLESIT_OWNER_EMAIL', env('DBP_ADMIN_EMAIL')),
         'api_keys' => json_decode(env('TABLESIT_API_KEYS_JSON', '{}'), true) ?: [],
         'timeout' => (int) env('TABLESIT_TIMEOUT', 15),

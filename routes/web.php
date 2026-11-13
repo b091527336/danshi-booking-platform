@@ -10,6 +10,7 @@ use App\Http\Controllers\SyncCenterController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
+Route::post('/tablesit/webhook', \App\Http\Controllers\TableSitWebhookController::class)->middleware('throttle:600,1');
 Route::post('/line/webhook/{channel}', \App\Http\Controllers\LineWebhookController::class)->where('channel', '[a-zA-Z0-9_-]+')->middleware('throttle:120,1');
 
 Route::middleware('guest')->group(function () {

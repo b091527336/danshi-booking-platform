@@ -19,6 +19,10 @@ class SyncCenterController extends Controller
         $partnerApiKeyConfigured = filled(config('services.tablesit.partner_api_key'));
 
         return view('sync.index', [
+            'webhookConfigured' => filled(config('services.tablesit.webhook_secret')),
+            'webhookEvents' => \Illuminate\Support\Facades\DB::table('tablesit_webhook_events')
+                ->whereIn('organization_uid', Organization::whereIn('id', $request->user()->organizationIds())->pluck('external_id'))
+                ->latest('id')->limit(20)->get(),
             'runs' => SyncRun::query()
                 ->with('organization')
                 ->whereIn('organization_id', $request->user()->organizationIds())
