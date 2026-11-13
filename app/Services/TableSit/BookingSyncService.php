@@ -81,10 +81,24 @@ class BookingSyncService
         return $run->fresh();
     }
 
-    private function syncOne(Organization $organization, array $payload, SyncRun $run): void
+    public function syncOne(Organization $organization, array $payload, ?SyncRun $run = null): void
     {
         DB::transaction(function () use ($organization, $payload, $run) {
+            // Serialize webhook and polling writes for this organization.
+            Organization::whereKey($organization->id)->lockForUpdate()->firstOrFail();
             $mapped = $this->mapper->booking($payload, $organization->timezone);
+            $existing = Booking::where('external_provider', 'tablesit')->where('external_id', $mapped['external_id'])->first();
+            if ($existing && $existing->organization_id !== $organization->id) {
+                throw new \RuntimeException('Tablesit booking organization mismatch.');
+            }
+            $incomingVersion = $payload['updated_at'] ?? null;
+            $storedVersion = $existing?->provider_payload['updated_at'] ?? null;
+            if (($existing?->provider_payload['_dbp_deleted'] ?? false) && (! $incomingVersion || \Carbon\CarbonImmutable::parse($incomingVersion)->lte(\Carbon\CarbonImmutable::parse($storedVersion)))) {
+                return;
+            }
+            if ($incomingVersion && $storedVersion && \Carbon\CarbonImmutable::parse($incomingVersion)->lt(\Carbon\CarbonImmutable::parse($storedVersion))) {
+                return;
+            }
             $customerData = $this->mapper->customer($payload);
             $customer = $customerData ? $this->resolveCustomer($customerData) : null;
 
@@ -113,7 +127,7 @@ class BookingSyncService
                 app(BookingNotificationService::class)->enqueue($booking, $isNew ? '新預約已收到' : ($booking->status === 'cancelled' ? '預約已取消' : '預約已更新'));
             }
 
-            $run->increment($isNew ? 'created_count' : 'updated_count');
+            $run?->increment($isNew ? 'created_count' : 'updated_count');
         });
     }
 

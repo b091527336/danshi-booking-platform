@@ -9,6 +9,20 @@ use RuntimeException;
 
 class TableSitClient
 {
+    public function booking(Organization $organization, string $uid): ?array
+    {
+        $response = $this->request($organization)->get('/bookings/'.rawurlencode($uid));
+        if ($response->status() === 404) {
+            return null;
+        }
+        $response->throw();
+        $booking = $response->json('data');
+        if (! is_array($booking) || ($booking['uid'] ?? null) !== $uid) {
+            throw new RuntimeException('Invalid Tablesit booking response.');
+        }
+        return $booking;
+    }
+
     public function bookings(
         Organization $organization,
         string $dateFrom,

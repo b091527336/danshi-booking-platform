@@ -99,3 +99,5 @@ Schedule::command('tablesit:sync-bookings')
     ->withoutOverlapping(20);
 
 Schedule::command('dbp:send-notifications')->everyMinute()->withoutOverlapping(5);
+
+Schedule::command('tablesit:process-webhooks')->everyMinute()->withoutOverlapping(10);

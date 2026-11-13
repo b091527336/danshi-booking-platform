@@ -10,6 +10,20 @@
     @if(session($key))<div class="alert alert-{{ $style }}">{{ session($key) }}</div>@endif
 @endforeach
 
+<section class="card stat-card p-4 mb-4">
+    <h2 class="h5">Tablesit Webhook</h2>
+    <p>{{ $webhookConfigured ? '簽章密鑰已設定；請以測試事件及實際預約確認送達與處理結果。' : '尚未設定簽章密鑰，接收端保持關閉；現有每分鐘 API 同步繼續運作。' }}</p>
+    <p>接收網址：<code>{{ url('/tablesit/webhook') }}</code></p>
+    <p class="small text-secondary">測試事件不會建立預約。收到事件後先保存，再由每分鐘背景程序查詢最新狀態；失敗會重試，最多 12 次，之後標示失敗。</p>
+    <div class="table-responsive"><table class="table"><thead><tr><th>事件</th><th>類型</th><th>狀態</th><th>重試</th></tr></thead><tbody>
+    @forelse($webhookEvents as $event)
+        <tr><td>{{ $event->event_id }}</td><td>{{ $event->event_type }}</td><td>{{ ['pending'=>'等待處理','processed'=>'已處理','test'=>'測試已收到','ignored'=>'已略過','failed'=>'處理失敗'][$event->status] ?? $event->status }}</td><td>{{ $event->attempts }}</td></tr>
+    @empty
+        <tr><td colspan="4">尚未收到 Webhook 事件。</td></tr>
+    @endforelse
+    </tbody></table></div>
+</section>
+
 <div class="row g-4 mb-5">
     @foreach($organizations as $organization)
         <div class="col-12 col-md-6 col-xl-4">
