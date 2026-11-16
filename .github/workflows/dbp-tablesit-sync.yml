@@ -1,0 +1,37 @@
+name: DBP Tablesit background sync
+on:
+  schedule:
+    - cron: '35 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/dbp-tablesit-sync.yml']
+permissions:
+  id-token: write
+concurrency:
+  group: dbp-tablesit-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Synchronize DBP and verify persisted result
+        shell: python
+        run: |
+          import json, os, urllib.parse, urllib.request
+          endpoint = 'https://dbp.danshi.com.tw/api/internal/tablesit-cron'
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          client = urllib.request.build_opener(NoRedirect())
+          url = os.environ['ACTIONS_ID_TOKEN_REQUEST_URL'] + '&audience=' + urllib.parse.quote(endpoint, safe='')
+          request = urllib.request.Request(url, headers={'Authorization': 'Bearer ' + os.environ['ACTIONS_ID_TOKEN_REQUEST_TOKEN']})
+          with client.open(request, timeout=30) as response:
+              token = json.load(response)['value']
+          request = urllib.request.Request(endpoint, data=b'', method='POST', headers={'Authorization': 'Bearer ' + token})
+          with client.open(request, timeout=180) as response:
+              result = json.load(response)
+          if result.get('ok') is not True or not result.get('id'):
+              raise RuntimeError('DBP synchronization did not confirm completion')
+          print(json.dumps(result, ensure_ascii=False))
