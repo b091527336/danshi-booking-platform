@@ -1,7 +1,5 @@
 name: DBP Tablesit background sync
 on:
-  schedule:
-    - cron: '52 * * * *'
   workflow_dispatch:
 permissions:
   id-token: write
