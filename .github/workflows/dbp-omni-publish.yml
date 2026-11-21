@@ -1,8 +1,6 @@
 name: DBP OmniDesk scheduled publishing
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '2-59/5 * * * *'
 permissions:
   id-token: write
 concurrency:
