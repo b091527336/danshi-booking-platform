@@ -16,9 +16,12 @@ class CustomerController extends Controller
             'keyword' => ['nullable', 'string', 'max:100'],
         ]);
 
+        $organizationIds = $request->user()->organizationIds();
+        $visibleBookings = fn (Builder $query) => $query->whereIn('organization_id', $organizationIds);
+
         $customers = Customer::query()
-            ->whereHas('bookings', fn (Builder $query) => $query->whereIn('organization_id', $request->user()->organizationIds()))
-            ->withCount('bookings')
+            ->whereHas('bookings', $visibleBookings)
+            ->withCount(['bookings' => $visibleBookings])
             ->when($filters['keyword'] ?? null, function (Builder $query, string $keyword) {
                 $query->where(function (Builder $query) use ($keyword) {
                     $query->where('name', 'like', "%{$keyword}%")
